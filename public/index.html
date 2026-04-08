@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ad Slot Allocator — DAA Project</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111419;
+    --card: #161b22;
+    --border: #21262d;
+    --accent: #f78166;
+    --accent2: #79c0ff;
+    --accent3: #56d364;
+    --accent4: #d2a8ff;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --warn: #e3b341;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(247,129,102,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(247,129,102,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px 60px; }
+
+  /* Header */
+  header {
+    padding: 32px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+  }
+  .logo-bracket {
+    font-family: var(--mono);
+    font-size: 42px;
+    color: var(--accent);
+    line-height: 1;
+    animation: pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+  .header-text h1 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .header-text p {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .badge {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 12px;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 768px) { .layout { grid-template-columns: 1fr; } }
+
+  /* Panel */
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .panel-header {
+    background: var(--surface);
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .dot-red { background: #f78166; }
+  .dot-yellow { background: #e3b341; }
+  .dot-green { background: #56d364; }
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .panel-body { padding: 20px; }
+
+  /* Form */
+  label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  input, select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 14px;
+  }
+  input:focus, select:focus { border-color: var(--accent2); }
+
+  /* Ad table */
+  .ad-list { margin-bottom: 14px; }
+  .ad-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.2fr 32px;
+    gap: 8px;
+    align-items: end;
+    margin-bottom: 8px;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn { from { opacity:0; transform: translateY(-6px); } to { opacity:1; transform: none; } }
+  .ad-row input { margin-bottom: 0; font-size: 12px; padding: 6px 8px; }
+  .ad-row .col-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .col-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.2fr 32px;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .col-header span {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .btn-del {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 4px;
+    width: 32px; height: 31px;
+    font-size: 16px;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-del:hover { border-color: var(--accent); color: var(--accent); background: rgba(247,129,102,0.08); }
+
+  /* Buttons */
+  .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 9px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-add {
+    background: rgba(121,192,255,0.1);
+    color: var(--accent2);
+    border: 1px solid rgba(121,192,255,0.3);
+  }
+  .btn-add:hover { background: rgba(121,192,255,0.2); }
+  .btn-run {
+    background: var(--accent);
+    color: #0a0c10;
+    font-weight: 700;
+    flex: 1;
+  }
+  .btn-run:hover { background: #ff9882; transform: translateY(-1px); }
+  .btn-run:active { transform: translateY(0); }
+  .btn-clear {
+    background: none;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-clear:hover { color: var(--text); border-color: var(--muted); }
+
+  /* Method selector */
+  .method-pills {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;
+  }
+  .pill {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--muted);
+  }
+  .pill:hover { border-color: var(--muted); color: var(--text); }
+  .pill.active { border-color: var(--accent); color: var(--accent); background: rgba(247,129,102,0.1); }
+  .pill[data-method="dp"].active { border-color: var(--accent4); color: var(--accent4); background: rgba(210,168,255,0.1); }
+  .pill[data-method="knapsack"].active { border-color: var(--accent3); color: var(--accent3); background: rgba(86,211,100,0.1); }
+  .pill[data-method="ratio"].active { border-color: var(--warn); color: var(--warn); background: rgba(227,179,65,0.1); }
+  .pill[data-method="all"].active { border-color: var(--accent2); color: var(--accent2); background: rgba(121,192,255,0.1); }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  /* Results */
+  #results { margin-top: 24px; }
+  .result-tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 14px;
+    border-radius: 4px 4px 0 0;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: var(--card);
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Result card */
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .stat-row {
+    display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .stat {
+    flex: 1; min-width: 100px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 14px;
+  }
+  .stat-val {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .stat-val.green { color: var(--accent3); }
+  .stat-val.blue { color: var(--accent2); }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  /* Schedule table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  th {
+    text-align: left;
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(33,38,45,0.5);
+    color: var(--text);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .bid-cell { color: var(--accent3); font-weight: 700; }
+  .name-cell { color: var(--accent2); }
+
+  /* Timeline */
+  .timeline-wrap { margin-top: 14px; }
+  .timeline-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .timeline {
+    position: relative;
+    height: 36px;
+    background: var(--card);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .tl-bar {
+    position: absolute;
+    top: 4px;
+    height: 28px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity 0.2s;
+    cursor: default;
+  }
+  .tl-bar:hover { filter: brightness(1.2); }
+
+  /* Loading spinner */
+  .spinner {
+    display: none;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(247,129,102,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading .spinner { display: inline-block; }
+  .loading .btn-text { display: none; }
+
+  /* Error */
+  .error-box {
+    background: rgba(247,129,102,0.1);
+    border: 1px solid rgba(247,129,102,0.3);
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    margin-top: 14px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .empty-state .icon { font-size: 32px; margin-bottom: 10px; }
+
+  /* Comparison table */
+  .compare-table th, .compare-table td {
+    text-align: center;
+  }
+  .compare-table th:first-child, .compare-table td:first-child {
+    text-align: left;
+  }
+  .best { color: var(--accent3); font-weight: 700; }
+
+  /* Algo info */
+  .algo-info {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+    line-height: 1.6;
+    font-family: var(--mono);
+  }
+  .algo-info code {
+    color: var(--accent2);
+    background: rgba(121,192,255,0.1);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo-bracket">{}</div>
+    <div class="header-text">
+      <h1>Ad Slot Allocator</h1>
+      <p>Design &amp; Analysis of Algorithms — LA2 Project</p>
+    </div>
+    <div class="badge">C Language</div>
+  </header>
+
+  <div class="layout">
+    <!-- Input Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot dot-red"></div>
+        <div class="panel-dot dot-yellow"></div>
+        <div class="panel-dot dot-green"></div>
+        <span class="panel-title">Input Configuration</span>
+      </div>
+      <div class="panel-body">
+
+        <label>Algorithm</label>
+        <div class="method-pills">
+          <div class="pill active" data-method="all">All Methods</div>
+          <div class="pill" data-method="greedy">Greedy (End Time)</div>
+          <div class="pill" data-method="ratio">Greedy (Ratio)</div>
+          <div class="pill" data-method="dp">DP Weighted</div>
+          <div class="pill" data-method="knapsack">Knapsack DP</div>
+        </div>
+
+        <label>Time Capacity (for Knapsack)</label>
+        <input type="number" id="capacity" value="20" min="1">
+
+        <hr class="divider">
+
+        <label>Ad Requests</label>
+        <div class="col-header">
+          <span>Name</span>
+          <span>Start</span>
+          <span>End</span>
+          <span>Bid (₹)</span>
+          <span></span>
+        </div>
+        <div class="ad-list" id="adList"></div>
+
+        <div class="btn-group" style="margin-bottom:16px;">
+          <button class="btn btn-add" onclick="addRow()">＋ Add Ad</button>
+          <button class="btn btn-clear" onclick="loadSample()">Load Sample</button>
+        </div>
+
+        <hr class="divider">
+
+        <button class="btn btn-run" id="runBtn" onclick="runAlgorithm()">
+          <div class="spinner"></div>
+          <span class="btn-text">▶ Run Algorithm</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot dot-red"></div>
+        <div class="panel-dot dot-yellow"></div>
+        <div class="panel-dot dot-green"></div>
+        <span class="panel-title">Algorithm Info</span>
+      </div>
+      <div class="panel-body">
+        <div id="algoInfo">
+          <div style="margin-bottom:18px;">
+            <div style="font-weight:700; margin-bottom:6px; color:var(--accent);">Greedy — Activity Selection</div>
+            <div class="algo-info">
+              Sorts ads by <code>end time</code>, then greedily picks non-overlapping ads.<br>
+              Time: <code>O(n log n)</code> · Optimal for maximizing count.
+            </div>
+          </div>
+          <div style="margin-bottom:18px;">
+            <div style="font-weight:700; margin-bottom:6px; color:var(--warn);">Greedy — Bid/Duration Ratio</div>
+            <div class="algo-info">
+              Picks ads with highest <code>bid ÷ duration</code> ratio first.<br>
+              Time: <code>O(n²)</code> · Good for revenue density.
+            </div>
+          </div>
+          <div style="margin-bottom:18px;">
+            <div style="font-weight:700; margin-bottom:6px; color:var(--accent4);">DP — Weighted Interval Scheduling</div>
+            <div class="algo-info">
+              Finds optimal non-overlapping set maximizing total bid.<br>
+              Time: <code>O(n log n)</code> · Provably optimal for interval scheduling.
+            </div>
+          </div>
+          <div>
+            <div style="font-weight:700; margin-bottom:6px; color:var(--accent3);">DP — 0/1 Knapsack</div>
+            <div class="algo-info">
+              Treats each ad's duration as weight, bid as value.<br>
+              Time: <code>O(n × capacity)</code> · Optimal for time-capacity constraint.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results"></div>
+</div>
+
+<script>
+let selectedMethod = 'all';
+let adCounter = 0;
+
+const COLORS = ['#f78166','#79c0ff','#56d364','#d2a8ff','#e3b341','#ff7b72','#ffa657','#7ee787'];
+
+function setMethod(m) {
+  selectedMethod = m;
+  document.querySelectorAll('.pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.method === m);
+  });
+}
+
+document.querySelectorAll('.pill').forEach(p => {
+  p.addEventListener('click', () => setMethod(p.dataset.method));
+});
+
+function addRow(name='', start='', end='', bid='') {
+  adCounter++;
+  const id = `ad-${adCounter}`;
+  const row = document.createElement('div');
+  row.className = 'ad-row';
+  row.id = id;
+  row.innerHTML = `
+    <input type="text" placeholder="Ad Name" value="${name}" class="ad-name">
+    <input type="number" placeholder="0" value="${start}" class="ad-start" min="0">
+    <input type="number" placeholder="0" value="${end}" class="ad-end" min="0">
+    <input type="number" placeholder="0" value="${bid}" class="ad-bid" min="0">
+    <button class="btn-del" onclick="removeRow('${id}')" title="Remove">×</button>
+  `;
+  document.getElementById('adList').appendChild(row);
+}
+
+function removeRow(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function loadSample() {
+  document.getElementById('adList').innerHTML = '';
+  adCounter = 0;
+  const sample = [
+    ['BrandX',  1, 3,  50],
+    ['Nike',    2, 5,  60],
+    ['Apple',   4, 6,  70],
+    ['Google',  6, 8,  80],
+    ['Zomato',  3, 7,  90],
+    ['Flipkart',8, 10, 55],
+    ['Swiggy',  1, 4,  75],
+  ];
+  sample.forEach(([n,s,e,b]) => addRow(n,s,e,b));
+}
+
+function getAds() {
+  const rows = document.querySelectorAll('.ad-row');
+  const ads = [];
+  rows.forEach(row => {
+    const name  = row.querySelector('.ad-name').value.trim() || `Ad_${ads.length+1}`;
+    const start = parseInt(row.querySelector('.ad-start').value) || 0;
+    const end   = parseInt(row.querySelector('.ad-end').value)   || 0;
+    const bid   = parseInt(row.querySelector('.ad-bid').value)   || 0;
+    if (end > start && bid > 0) ads.push({ name, start, end, bid });
+  });
+  return ads;
+}
+
+async function runAlgorithm() {
+  const ads = getAds();
+  if (ads.length === 0) {
+    showError('Please add at least one valid ad (end > start, bid > 0).');
+    return;
+  }
+
+  const btn = document.getElementById('runBtn');
+  btn.classList.add('loading');
+
+  const capacity = parseInt(document.getElementById('capacity').value) || 20;
+
+  try {
+    const resp = await fetch('/api/allocate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method: selectedMethod, capacity, ads })
+    });
+    const data = await resp.json();
+    if (data.error) { showError(data.error); return; }
+
+    // normalize to array
+    const results = data.results ? data.results : [data];
+    renderResults(results, ads);
+  } catch(e) {
+    showError('Could not connect to server. Make sure server.js is running.');
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+
+function showError(msg) {
+  document.getElementById('results').innerHTML =
+    `<div class="error-box">⚠ ${msg}</div>`;
+}
+
+function renderResults(results, allAds) {
+  const maxTime = Math.max(...allAds.map(a => a.end));
+
+  let html = `<div class="panel" style="margin-top:24px;">
+    <div class="panel-header">
+      <div class="panel-dot dot-red"></div><div class="panel-dot dot-yellow"></div><div class="panel-dot dot-green"></div>
+      <span class="panel-title">Results</span>
+    </div>
+    <div class="panel-body">`;
+
+  if (results.length > 1) {
+    // Tabs
+    html += `<div class="result-tabs">`;
+    results.forEach((r, i) => {
+      html += `<button class="tab-btn ${i===0?'active':''}" onclick="switchTab(${i})">${r.methodLabel}</button>`;
+    });
+    html += `<button class="tab-btn" onclick="switchTab('compare')">📊 Compare</button>`;
+    html += `</div>`;
+
+    results.forEach((r, i) => {
+      html += `<div class="tab-content ${i===0?'active':''}" id="tab-${i}">`;
+      html += renderOne(r, allAds, maxTime);
+      html += `</div>`;
+    });
+
+    // Compare tab
+    html += `<div class="tab-content" id="tab-compare">`;
+    html += renderCompare(results);
+    html += `</div>`;
+
+  } else {
+    html += renderOne(results[0], allAds, maxTime);
+  }
+
+  html += `</div></div>`;
+  document.getElementById('results').innerHTML = html;
+}
+
+window.switchTab = function(idx) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i === idx || (idx==='compare' && i===document.querySelectorAll('.tab-btn').length-1)));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  const target = idx === 'compare' ? document.getElementById('tab-compare') : document.getElementById(`tab-${idx}`);
+  if (target) target.classList.add('active');
+};
+
+function renderOne(r, allAds, maxTime) {
+  const pct = r.totalProfit > 0
+    ? Math.round((r.schedule.reduce((s,a)=>s+a.bid,0) / allAds.reduce((s,a)=>s+a.bid,0))*100)
+    : 0;
+
+  let html = `<div class="stat-row">
+    <div class="stat"><div class="stat-val">₹${r.totalProfit}</div><div class="stat-label">Total Profit</div></div>
+    <div class="stat"><div class="stat-val green">${r.count}</div><div class="stat-label">Ads Selected</div></div>
+    <div class="stat"><div class="stat-val blue">${r.totalTime}</div><div class="stat-label">Time Used</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--warn)">${pct}%</div><div class="stat-label">Revenue Captured</div></div>
+  </div>`;
+
+  // Timeline
+  html += `<div class="timeline-label">Timeline Visualization</div>
+  <div class="timeline" style="margin-bottom:14px;">`;
+  r.schedule.forEach((ad, i) => {
+    const left  = ((ad.start) / maxTime * 100).toFixed(2);
+    const width = ((ad.end - ad.start) / maxTime * 100).toFixed(2);
+    const color = COLORS[i % COLORS.length];
+    html += `<div class="tl-bar" title="${ad.name}: ₹${ad.bid}" style="left:${left}%;width:${width}%;background:${color}22;border:1px solid ${color};color:${color};padding:0 4px;">${ad.name}</div>`;
+  });
+  html += `</div>`;
+
+  // Table
+  html += `<table><thead><tr>
+    <th>#</th><th>Ad Name</th><th>Start</th><th>End</th><th>Duration</th><th>Bid (₹)</th>
+  </tr></thead><tbody>`;
+  r.schedule.forEach((ad, i) => {
+    const color = COLORS[i % COLORS.length];
+    html += `<tr>
+      <td style="color:${color}">${i+1}</td>
+      <td class="name-cell">${ad.name}</td>
+      <td>${ad.start}</td>
+      <td>${ad.end}</td>
+      <td>${ad.end - ad.start} units</td>
+      <td class="bid-cell">₹${ad.bid}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+
+  // Rejected
+  const selectedIds = new Set(r.schedule.map(a=>a.id));
+  const rejected = allAds.filter((_, i) => !r.schedule.some(s => s.name === allAds[i].name));
+  if (rejected.length > 0) {
+    html += `<div style="margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--muted);">
+      REJECTED (${rejected.length}): ${rejected.map(a=>`<span style="color:var(--accent)">${a.name}</span>`).join(', ')}
+    </div>`;
+  }
+
+  return `<div class="result-card">${html}</div>`;
+}
+
+function renderCompare(results) {
+  const maxProfit = Math.max(...results.map(r=>r.totalProfit));
+  let html = `<div class="result-card"><table class="compare-table">
+    <thead><tr>
+      <th>Algorithm</th><th>Profit (₹)</th><th>Ads Selected</th><th>Time Used</th>
+    </tr></thead><tbody>`;
+  results.forEach(r => {
+    const isBest = r.totalProfit === maxProfit;
+    html += `<tr>
+      <td style="font-family:var(--mono)">${r.methodLabel}</td>
+      <td class="${isBest?'best':''}">₹${r.totalProfit} ${isBest?'🏆':''}</td>
+      <td>${r.count}</td>
+      <td>${r.totalTime} units</td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+  return html;
+}
+
+// Init
+loadSample();
+</script>
+</body>
+</html>

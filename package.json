@@ -1,0 +1,11 @@
+{
+  "name": "ad-slot-allocator",
+  "version": "1.0.0",
+  "description": "Online Ad Slot Allocation - DAA Project",
+  "main": "server.js",
+  "scripts": {
+    "start": "gcc src/ad_scheduler.c -o ad_scheduler -lm && chmod +x ad_scheduler && node server.js",
+    "build": "gcc src/ad_scheduler.c -o ad_scheduler -lm && chmod +x ad_scheduler"
+  },
+  "dependencies": {}
+}
