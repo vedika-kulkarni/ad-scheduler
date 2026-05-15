@@ -6,12 +6,6 @@ The system integrates multiple scheduling and optimization algorithms implemente
 
 ---
 
-# Live Demo
-
-🔗 https://ad-scheduler.onrender.com
-
----
-
 # Problem Statement
 
 Digital advertising platforms must efficiently allocate limited ad slots while maximizing:
