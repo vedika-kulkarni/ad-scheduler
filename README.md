@@ -1,61 +1,268 @@
-# Online Ad Slot Allocation — DAA Project
+# AI-Powered Online Ad Slot Allocation System
 
-## Team
-- Algorithm: C Language (ad_scheduler.c)
-- Frontend: HTML/CSS/JavaScript
-- Server: Node.js (server.js)
+A full-stack advertisement scheduling and optimization platform developed to maximize ad revenue through algorithmic slot allocation and profit optimization techniques.
 
-## Algorithms Implemented (All in C)
+The system integrates multiple scheduling and optimization algorithms implemented in C, combined with a web-based frontend and Node.js server layer for interactive ad allocation analysis.
 
-| Algorithm | Time Complexity | Approach |
+---
+
+# Live Demo
+
+🔗 https://ad-scheduler.onrender.com
+
+---
+
+# Problem Statement
+
+Digital advertising platforms must efficiently allocate limited ad slots while maximizing:
+- Revenue generation
+- Advertisement visibility
+- Resource utilization
+- Scheduling efficiency
+
+This project simulates an intelligent advertisement scheduling engine capable of selecting optimal ad placements using greedy and dynamic programming algorithms.
+
+---
+
+# Key Features
+
+## Ad Scheduling Engine
+- Intelligent advertisement slot allocation
+- Multiple scheduling optimization algorithms
+- Profit maximization strategies
+- Capacity-constrained allocation support
+
+---
+
+## Optimization Algorithms
+
+| Algorithm | Time Complexity | Purpose |
 |---|---|---|
-| Greedy (End Time) | O(n log n) | Activity selection by earliest end |
-| Greedy (Ratio) | O(n²) | Best bid per unit duration first |
-| DP Weighted Interval | O(n log n) | Provably optimal scheduling |
-| DP Knapsack | O(n × W) | Capacity-constrained profit maximization |
+| Greedy (End Time) | O(n log n) | Earliest finishing activity selection |
+| Greedy (Ratio) | O(n²) | Maximum bid-to-duration prioritization |
+| DP Weighted Interval | O(n log n) | Optimal non-overlapping scheduling |
+| DP Knapsack | O(n × W) | Capacity-based revenue optimization |
 
-## How to Run
+---
 
-### Prerequisites
-- GCC compiler (MinGW on Windows, or `sudo apt install gcc` on Linux)
-- Node.js (https://nodejs.org)
+## Interactive Web Interface
+- Real-time ad scheduling simulation
+- Algorithm comparison visualization
+- Dynamic input management
+- Allocation result display
+
+---
+
+## Backend Processing
+- Node.js server integration
+- C program execution pipeline
+- JSON-based data communication
+- CLI and web execution support
+
+---
+
+# System Architecture
+
+```text
+Frontend (HTML/CSS/JavaScript)
+            │
+            ▼
+Node.js Server Layer
+            │
+            ▼
+C-Based Scheduling Engine
+            │
+            ▼
+Optimization Algorithms
+```
+
+---
+
+# Project Architecture
+
+```text
+ad_scheduler/
+│
+├── src/
+│   └── ad_scheduler.c
+│
+├── public/
+│   └── index.html
+│
+├── server.js
+├── run.bat
+├── run.sh
+└── README.md
+```
+
+---
+
+# Tech Stack
+
+## Backend
+- C Programming
+- Node.js
+
+## Frontend
+- HTML5
+- CSS3
+- JavaScript
+
+## Concepts & Algorithms
+- Greedy Algorithms
+- Dynamic Programming
+- Interval Scheduling
+- Knapsack Optimization
+
+---
+
+# Core Functionalities
+
+## Scheduling Optimization
+- Conflict-free ad allocation
+- Revenue-focused scheduling
+- Capacity-aware optimization
+
+---
+
+## Algorithm Comparison
+- Compare scheduling approaches
+- Analyze optimization performance
+- Evaluate profit outputs
+
+---
+
+## Cross-Platform Execution
+- Windows batch execution support
+- Linux/Mac shell execution support
+- CLI and browser-based interaction
+
+---
+
+# Installation & Setup
+
+## 1. Clone Repository
+
+```bash
+git clone https://github.com/yourusername/ad_scheduler.git
+cd ad_scheduler
+```
+
+---
+
+## 2. Install Node.js
+
+Download and install:
+
+```text
+https://nodejs.org
+```
+
+---
+
+## 3. Compile C Program
 
 ### Windows
-```
-Double-click run.bat
-```
-Or in cmd:
-```
-gcc src\ad_scheduler.c -o ad_scheduler.exe -lm
-node server.js
+
+```bash
+gcc src\\ad_scheduler.c -o ad_scheduler.exe -lm
 ```
 
 ### Linux / Mac
+
 ```bash
-chmod +x run.sh
-./run.sh
+gcc src/ad_scheduler.c -o ad_scheduler -lm
 ```
 
-Then open **http://localhost:3000** in your browser.
+---
 
-## Run C Program Directly (CLI mode)
+## 4. Run Server
 
-You can also test the C program directly:
+```bash
+node server.js
+```
+
+---
+
+## 5. Open Application
+
+```text
+http://localhost:3000
+```
+
+---
+
+# CLI Execution Example
+
 ```bash
 echo '{"method":"greedy","capacity":20,"ads":[{"name":"BrandX","start":1,"end":3,"bid":50},{"name":"Nike","start":2,"end":5,"bid":60}]}' | ./ad_scheduler
 ```
 
-Supported methods: `greedy`, `ratio`, `dp`, `knapsack`, `all`
+---
 
-## Project Structure
-```
-ad_scheduler/
-├── src/
-│   └── ad_scheduler.c     ← Main C program (all algorithms)
-├── public/
-│   └── index.html         ← Frontend UI
-├── server.js              ← Node.js bridge server
-├── run.bat                ← Windows launcher
-├── run.sh                 ← Linux/Mac launcher
-└── README.md
-```
+# Supported Scheduling Methods
+
+- greedy
+- ratio
+- dp
+- knapsack
+- all
+
+---
+
+# Screenshots
+
+## Scheduling Dashboard
+[Add Screenshot Here]
+
+---
+
+## Algorithm Comparison Results
+[Add Screenshot Here]
+
+---
+
+## Allocation Output Visualization
+[Add Screenshot Here]
+
+---
+
+# Future Improvements
+
+- AI-based bid prediction
+- Real-time scheduling analytics
+- Cloud deployment
+- Database integration
+- User authentication
+- Visualization dashboards
+- API-based scheduling service
+
+---
+
+# Learning Outcomes
+
+- Algorithm design & optimization
+- Dynamic programming implementation
+- Greedy scheduling techniques
+- Full-stack integration
+- Backend process communication
+- Cross-language system integration
+- Performance optimization concepts
+
+---
+
+# Deployment Options
+
+The application can be deployed using:
+- Render
+- Railway
+- Heroku
+- Vercel (Frontend)
+
+---
+
+# Author
+
+Vedika Kulkarni
+
+GitHub: https://github.com/vedika-kulkarni 
