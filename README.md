@@ -213,17 +213,13 @@ echo '{"method":"greedy","capacity":20,"ads":[{"name":"BrandX","start":1,"end":3
 # Screenshots
 
 ## Scheduling Dashboard
-[Add Screenshot Here]
+<img width="653" height="890" alt="image" src="https://github.com/user-attachments/assets/dab44ad0-8c3f-47e5-9984-9735f1cdc044" />
+
 
 ---
 
 ## Algorithm Comparison Results
-[Add Screenshot Here]
-
----
-
-## Allocation Output Visualization
-[Add Screenshot Here]
+<img width="621" height="531" alt="image" src="https://github.com/user-attachments/assets/aa50ec6f-b511-4172-9804-fc5e7b231c62" />
 
 ---
 
